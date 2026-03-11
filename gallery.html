@@ -52,6 +52,28 @@
         allImages.push(i);
       }
 
+      let delay = 0;
+      let flushTimer = null;
+
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const item = entry.target;
+            
+            if (item.dataset.imgLoaded === 'true') {
+              setTimeout(() => {
+                item.classList.add('loaded');
+              }, delay);
+              delay += 150; // stagger step
+              clearTimeout(flushTimer);
+              flushTimer = setTimeout(() => { delay = 0; }, 300);
+            }
+            item.dataset.intersecting = 'true';
+            obs.unobserve(item);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px 50px 0px' });
+
       allImages.forEach((imgIdx, arrayIdx) => {
         const item = document.createElement('div');
         item.className = 'full-gallery-item';
@@ -67,13 +89,26 @@
           } else {
             item.classList.add('portrait');
           }
-          item.classList.add('loaded');
+          item.dataset.imgLoaded = 'true';
+          
+          if (item.dataset.intersecting === 'true') {
+            setTimeout(() => {
+              item.classList.add('loaded');
+            }, delay);
+            delay += 150;
+            clearTimeout(flushTimer);
+            flushTimer = setTimeout(() => { delay = 0; }, 300);
+          }
         };
-        img.src = `assets/image_${imgIdx}.jpg`;
+
+        // Sử dụng ảnh thumbnail đã tối ưu cho lưới (vui lòng chờ tải giây lát), lightbox vẫn dùng ảnh gốc nét nhất
+        img.src = `assets/thumb/image_${imgIdx}.jpg`;
 
         img.addEventListener('click', () => openLightbox(arrayIdx));
         item.appendChild(img);
         grid.appendChild(item);
+        
+        observer.observe(item);
       });
 
       // Lightbox
