@@ -62,54 +62,101 @@ document.addEventListener("DOMContentLoaded", () => {
       }
   }, 1000);
 
-  // Background Music Control
+  // ==========================================
+  // Background Music Control (Cross-page sync)
+  // ==========================================
   const musicBtn = document.getElementById('music-btn');
   const bgMusic = document.getElementById('bg-music');
-  let isPlaying = false;
-
-  toggleMusic()
-
-  function toggleMusic() {
-      if (isPlaying) {
-          bgMusic.pause();
-          musicBtn.classList.remove('playing');
-          musicBtn.classList.add('paused');
-      } else {
-          bgMusic.play().then(() => {
-            musicBtn.classList.add('playing');
-            musicBtn.classList.remove('paused');
-          }).catch(e => console.log("Audio play failed:", e));
+  
+  if (musicBtn && bgMusic) {
+      let isPlaying = sessionStorage.getItem('musicPlaying') === 'true';
+      const savedTime = sessionStorage.getItem('musicTime');
+      
+      bgMusic.volume = 0.5;
+      
+      // Restore previous time if it exists
+      if (savedTime && !isNaN(savedTime)) {
+          bgMusic.currentTime = parseFloat(savedTime);
       }
-      isPlaying = !isPlaying;
-  }
 
-  musicBtn.addEventListener('click', toggleMusic);
-
-  // Try Auto-play
-  bgMusic.volume = 0.5; // Set volume to 50%
-  const playPromise = bgMusic.play();
-
-  if (playPromise !== undefined) {
-      playPromise.then(_ => {
-          // Autoplay started!
-          isPlaying = true;
-          musicBtn.classList.add('playing');
-      }).catch(error => {
-          // Autoplay was prevented.
-          // Show a UI element to let the user manually start playback.
-          console.log("Autoplay prevented. User interaction required.");
-          musicBtn.classList.remove('playing');
-          musicBtn.classList.add('paused');
-          
-          // Optional: One-time click listener on body to start music if autoplay failed
-          document.body.addEventListener('click', function startMusicOnce() {
-              bgMusic.play();
-              isPlaying = true;
+      function updateMusicUI() {
+          if (isPlaying) {
               musicBtn.classList.add('playing');
               musicBtn.classList.remove('paused');
-              document.body.removeEventListener('click', startMusicOnce);
-          });
-      });
+          } else {
+              musicBtn.classList.remove('playing');
+              musicBtn.classList.add('paused');
+          }
+      }
+
+      function toggleMusic() {
+          if (isPlaying) {
+              bgMusic.pause();
+              isPlaying = false;
+              sessionStorage.setItem('musicPlaying', 'false');
+          } else {
+              bgMusic.play().catch(e => console.log("Audio play failed:", e));
+              isPlaying = true;
+              sessionStorage.setItem('musicPlaying', 'true');
+          }
+          updateMusicUI();
+      }
+
+      musicBtn.addEventListener('click', toggleMusic);
+
+      // Save time continuously to resume perfectly on next page
+      setInterval(() => {
+          if (isPlaying && !bgMusic.paused) {
+              sessionStorage.setItem('musicTime', bgMusic.currentTime);
+          }
+      }, 500);
+
+      // Initial Play Logic
+      if (isPlaying) {
+          // It was playing on the previous page, try to resume
+          const playPromise = bgMusic.play();
+          if (playPromise !== undefined) {
+              playPromise.then(() => {
+                  updateMusicUI();
+              }).catch(error => {
+                  console.log("Autoplay prevented on navigation. User needs to interact.");
+                  isPlaying = false;
+                  sessionStorage.setItem('musicPlaying', 'false');
+                  updateMusicUI();
+              });
+          }
+      } else if (sessionStorage.getItem('musicPlaying') === null) {
+          // First time visitor, try autoplay
+          const playPromise = bgMusic.play();
+          if (playPromise !== undefined) {
+              playPromise.then(() => {
+                  isPlaying = true;
+                  sessionStorage.setItem('musicPlaying', 'true');
+                  updateMusicUI();
+              }).catch(error => {
+                  console.log("Initial autoplay prevented.");
+                  isPlaying = false;
+                  sessionStorage.setItem('musicPlaying', 'false');
+                  updateMusicUI();
+              });
+          }
+      } else {
+          updateMusicUI();
+      }
+
+      // One-time interaction to start music if autoplay failed
+      document.body.addEventListener('click', function startMusicOnce() {
+          if (!isPlaying && sessionStorage.getItem('userInteracted') !== 'true') {
+              sessionStorage.setItem('userInteracted', 'true');
+              bgMusic.play().then(() => {
+                  isPlaying = true;
+                  sessionStorage.setItem('musicPlaying', 'true');
+                  updateMusicUI();
+              }).catch(e => console.log(e));
+          }
+          // Remove listener after first interaction
+          document.body.removeEventListener('click', startMusicOnce);
+      }, { once: true });
   }
 
   // Hero Sparkler Effect
