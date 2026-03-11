@@ -254,7 +254,9 @@ document.addEventListener("DOMContentLoaded", () => {
             { time: 267, text: "Sau này tóc có hơi bạc hơn trước" },
             { time: 271, text: "Thì mình vẫn cứ yêu nhau như bình thường" },
             { time: 274, text: "Vẫn nói anh sẽ luôn thương em nhiều nhất" },
-            { time: 284, text: "" }, // Kết thúc
+            { time: 284, text: "" },
+            { time: 285, text: "" },
+            { time: 286, text: "" } // Kết thúc
         ];
 
         if (lyricsContainer && lyricCur) {
@@ -273,17 +275,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (currentIndex !== -1) {
                     const currentLyricText = lyrics[currentIndex].text || "";
                     const lastLyricText = lyricCur.dataset.text || "";
-                    
+
                     // Update DOM only if lyric changed
                     if (lastLyricText !== currentLyricText) {
                         lyricCur.dataset.text = currentLyricText;
-                        
+
                         // Prev lyric
                         let prevText = "";
                         if (currentIndex > 0) {
                             prevText = lyrics[currentIndex - 1].text || "";
                         }
-                        
+
                         // Next lyric
                         let nextText = "";
                         if (currentIndex < lyrics.length - 1) {
