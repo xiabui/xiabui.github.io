@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Album Ảnh Cưới | Văn Xía & Quỳnh Nga</title>
+  <meta name="description" content="Bộ sưu tập ảnh cưới đầy đủ của Văn Xía và Quỳnh Nga" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles/style.css" />
+</head>
+
+<body>
+  <!-- Gallery Full Page -->
+  <section class="full-gallery-page">
+    <div class="full-gallery-header">
+      <a href="index.html" class="back-btn">&larr; Quay Lại</a>
+      <h1 class="full-gallery-title">Album Ảnh Cưới</h1>
+      <p class="full-gallery-subtitle">Xía & Nga &mdash; 05.04.2026</p>
+    </div>
+
+    <div class="full-gallery-grid" id="full-gallery-grid">
+      <!-- JS will populate -->
+    </div>
+  </section>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightbox-close">&times;</button>
+    <button class="lightbox-nav lightbox-prev" id="lightbox-prev">&lsaquo;</button>
+    <button class="lightbox-nav lightbox-next" id="lightbox-next">&rsaquo;</button>
+    <div class="lightbox-content">
+      <img id="lightbox-img" src="" alt="Ảnh Cưới" />
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const grid = document.getElementById('full-gallery-grid');
+      const skipIndices = [19, 20];
+      const allImages = [];
+
+      for (let i = 1; i <= 34; i++) {
+        if (skipIndices.includes(i)) continue;
+        allImages.push(i);
+      }
+
+      allImages.forEach((imgIdx, arrayIdx) => {
+        const item = document.createElement('div');
+        item.className = 'full-gallery-item';
+
+        const img = document.createElement('img');
+        img.alt = `Ảnh Cưới ${imgIdx}`;
+        img.loading = 'lazy';
+        img.dataset.index = arrayIdx;
+
+        img.onload = function () {
+          if (this.naturalWidth > this.naturalHeight) {
+            item.classList.add('landscape');
+          } else {
+            item.classList.add('portrait');
+          }
+          item.classList.add('loaded');
+        };
+        img.src = `assets/image_${imgIdx}.jpg`;
+
+        img.addEventListener('click', () => openLightbox(arrayIdx));
+        item.appendChild(img);
+        grid.appendChild(item);
+      });
+
+      // Lightbox
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightbox-img');
+      const closeBtn = document.getElementById('lightbox-close');
+      const prevBtn = document.getElementById('lightbox-prev');
+      const nextBtn = document.getElementById('lightbox-next');
+      let currentIndex = 0;
+
+      function openLightbox(index) {
+        currentIndex = index;
+        updateLightboxImage();
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      function updateLightboxImage() {
+        const imgIdx = allImages[currentIndex];
+        lightboxImg.src = `assets/image_${imgIdx}.jpg`;
+        lightboxImg.alt = `Ảnh Cưới ${imgIdx}`;
+      }
+
+      function nextImage() {
+        currentIndex = (currentIndex + 1) % allImages.length;
+        updateLightboxImage();
+      }
+
+      function prevImage() {
+        currentIndex = (currentIndex - 1 + allImages.length) % allImages.length;
+        updateLightboxImage();
+      }
+
+      closeBtn.addEventListener('click', closeLightbox);
+      nextBtn.addEventListener('click', nextImage);
+      prevBtn.addEventListener('click', prevImage);
+
+      lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (!lightbox.classList.contains('active')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowRight') nextImage();
+        if (e.key === 'ArrowLeft') prevImage();
+      });
+    })();
+  </script>
+</body>
+
+</html>

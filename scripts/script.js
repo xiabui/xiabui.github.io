@@ -19,6 +19,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const animatedElements = document.querySelectorAll(".animate-on-scroll");
   animatedElements.forEach((el) => observer.observe(el));
 
+  // Also observe dynamically added elements (e.g., from gallery JS)
+  const mutationObs = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1) {
+          if (node.classList && node.classList.contains('animate-on-scroll')) {
+            observer.observe(node);
+          }
+          // Check children too
+          const children = node.querySelectorAll && node.querySelectorAll('.animate-on-scroll');
+          if (children) children.forEach((child) => observer.observe(child));
+        }
+      });
+    });
+  });
+  mutationObs.observe(document.body, { childList: true, subtree: true });
+
   // Countdown Timer
   
   const weddingDate = new Date('April 5, 2026 09:00:00').getTime();
